@@ -109,7 +109,7 @@ userSchema.methods.toJSON = function () {
   return userObject;
 };
 
-userSchema.statics.manualRegistration = async function (profile) {
+userSchema.statics.register = async function (profile) {
   const { email, pw, firstName, lastName } = profile;
 
   if ([email, pw, firstName, lastName].some((field) => !field)) {
@@ -138,41 +138,8 @@ userSchema.statics.manualRegistration = async function (profile) {
     firstName: profile.firstName,
     lastName: profile.lastName,
     email: profile.email,
-    password: profile.pw,
-    // stripeCustomerId: customer.id,
-  });
-};
-
-userSchema.statics.googleRegistration = async function (profile) {
-  const { email, firstName, lastName } = profile;
-
-  if ([email, firstName, lastName].some((field) => !field)) {
-    const err = new Error("All fields are required");
-    err.status = 422;
-    err.message = "All fields are required";
-    throw err;
-  }
-
-  // check if user is already in the database
-  const userExist = await this.findOne({ email: profile.email });
-
-  if (userExist) {
-    const err = new Error("User already exists");
-    err.status = 409;
-    err.message = "User already exists";
-    throw err;
-  }
-
-  // create stripe customer
-  const customer = await stripe.customers.create({
-    description: "Customer for " + email,
-  });
-
-  return this.create({
-    firstName: profile.firstName,
-    lastName: profile.lastName,
-    email: profile.email,
-    // stripeCustomerId: customer.id,
+    password: profile.pw || uuid.v4(),
+    stripeCustomerId: customer.id,
   });
 };
 

@@ -46,6 +46,9 @@ const userSchema = new mongoose.Schema(
       default: uuid.v4,
       required: true,
     },
+    avatar: {
+      type: String,
+    },
     firstName: {
       type: String,
       trim: true,
@@ -80,7 +83,10 @@ const userSchema = new mongoose.Schema(
       passwordValidator,
       required: true,
     },
-
+    organization: {
+      type: String,
+      ref: "Organization",
+    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -109,38 +115,116 @@ userSchema.methods.toJSON = function () {
   return userObject;
 };
 
-userSchema.statics.register = async function (profile) {
-  const { email, pw, firstName, lastName } = profile;
+// Login with email and password
+userSchema.statics.standardRegistration = async function (profile) {
+  try {
+    const { email, password, firstName, lastName } = profile;
 
-  if ([email, pw, firstName, lastName].some((field) => !field)) {
-    const err = new Error("All fields are required");
-    err.status = 422;
-    err.message = "All fields are required";
-    throw err;
+    if ([email, password, firstName, lastName].some((field) => !field)) {
+      const err = new Error("All fields are required");
+      err.status = 422;
+      err.message = "All fields are required";
+      throw err;
+    }
+
+    // check if user is already in the database
+    const userExist = await this.findOne({ email: profile.email });
+
+    if (userExist) {
+      const err = new Error("User already exists");
+      err.status = 409;
+      err.message = "User already exists";
+      throw err;
+    }
+
+    // create stripe customer
+    const customer = await stripe.customers.create({
+      description: "Customer for " + email,
+    });
+
+    return this.create({
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: profile.email,
+      password: profile.password || uuid.v4(),
+      stripeCustomerId: customer.id,
+    });
+  } catch (error) {
+    console.log(error);
+    return { error: error.message, status: error.status };
   }
+};
 
-  // check if user is already in the database
-  const userExist = await this.findOne({ email: profile.email });
+// Sign up with Google
+userSchema.statics.googleRegistration = async function (profile) {
+  try {
+    const { email, firstName, lastName, emailVerified } = profile;
 
-  if (userExist) {
-    const err = new Error("User already exists");
-    err.status = 409;
-    err.message = "User already exists";
-    throw err;
+    if ([email, firstName, lastName, emailVerified].some((field) => !field)) {
+      const err = new Error("All fields are required");
+      err.status = 422;
+      err.message = "All fields are required";
+      throw err;
+    }
+
+    // check if user is already in the database
+    const userExist = await this.findOne({ email: profile.email });
+
+    if (userExist) {
+      const err = new Error("User already exists");
+      err.status = 409;
+      err.message = "User already exists";
+      throw err;
+    }
+
+    // create stripe customer
+    const customer = await stripe.customers.create({
+      description: "Customer for " + email,
+    });
+
+    return this.create({
+      avatar: profile.avatar,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: profile.email,
+      isEmailVerified: profile.emailVerified,
+      stripeCustomerId: customer.id,
+      password: uuid.v4(),
+    });
+  } catch (error) {
+    console.log(error);
+    return { error: error.message, status: error.status };
   }
+};
 
-  // create stripe customer
-  const customer = await stripe.customers.create({
-    description: "Customer for " + email,
-  });
+// Sign in with Google
+userSchema.statics.googleSignIn = async function (profile) {
+  try {
+    const { email } = profile;
 
-  return this.create({
-    firstName: profile.firstName,
-    lastName: profile.lastName,
-    email: profile.email,
-    password: profile.pw || uuid.v4(),
-    stripeCustomerId: customer.id,
-  });
+    if ([email].some((field) => !field)) {
+      const err = new Error("All fields are required");
+      err.status = 422;
+      err.message = "All fields are required";
+      throw err;
+    }
+
+    // check if user is already in the database
+    // const user = await this.findOne({ email: profile.email });
+    const user = await this.findOne({ email: profile.email });
+
+    if (!user) {
+      const err = new Error("User does not exist");
+      err.status = 404;
+      err.message = "User does not exist";
+      throw err;
+    }
+
+    return user;
+  } catch (error) {
+    console.log(error);
+    return { error: error.message, status: error.status };
+  }
 };
 
 exports.User = mongoose.model("User", userSchema);

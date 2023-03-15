@@ -13,24 +13,24 @@ router.post("/signin", googleAuthController.googleSignIn);
 // @access  Public
 router.post("/register", googleAuthController.googleRegister);
 
-// @route   POST api/auth/google/callback/signin
+// @route   POST api/auth/google/cb/signin
 // @desc    Sign in with Google
 // @access  Public
-router.post("/callback/signin", googleAuthController.googleSignInCallback);
+router.post("/cb/signin", googleAuthController.googleSignInCallback);
 
-// @route   POST api/auth/google/callback/register
+// @route   POST api/auth/google/cb/register
 // @desc    Register with Google
 // @access  Public
-router.post("/callback/register", googleAuthController.googleRegisterCallback);
+router.post("/cb/register", googleAuthController.googleRegisterCallback);
 
 // @route   POST api/auth/google/gmail
 // @desc    Connect to Gmail - different from Sign in with Google
 // @access  Public
 router.post("/gmail", googleAuthController.googleGmail);
 
-// @route   POST api/auth/google/gmail-callback
+// @route   POST api/auth/google/gmail-cb
 // @desc    Connect to Gmail - different from Sign in with Google
 // @access  Public
-router.post("/gmail-callback", googleAuthController.googleGmailCallback);
+router.post("/gmail-cb", googleAuthController.googleGmailCallback);
 
 module.exports = router;

@@ -18,7 +18,7 @@ const createOauth2Client = (redirectUrl) => {
 // @access  Public
 exports.googleSignIn = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/callback/signin";
+    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb/signin";
     const client = createOauth2Client(callbackUrl);
 
     const authUrl = client.generateAuthUrl({
@@ -28,10 +28,10 @@ exports.googleSignIn = async (req, res) => {
       nonce: uuid.v4(),
     });
 
-    return res.send({ url: authUrl });
+    return res.send(authUrl);
   } catch (e) {
     console.log(e);
-    return res.status(e.status || 500).send({ error: e.message });
+    return res.status(e.status || 500).send(e.message);
   }
 };
 
@@ -40,7 +40,7 @@ exports.googleSignIn = async (req, res) => {
 // @access  Public
 exports.googleRegister = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/callback/register";
+    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb/register";
     const client = createOauth2Client(callbackUrl);
 
     const authUrl = client.generateAuthUrl({
@@ -50,10 +50,10 @@ exports.googleRegister = async (req, res) => {
       nonce: uuid.v4(),
     });
 
-    return res.send({ url: authUrl });
+    return res.send(authUrl);
   } catch (e) {
     console.log(e);
-    return res.status(e.status || 500).send({ error: e.message });
+    return res.status(e.status || 500).send(e.message);
   }
 };
 
@@ -62,7 +62,7 @@ exports.googleRegister = async (req, res) => {
 // @access  Public
 exports.googleSignInCallback = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/callback/signin";
+    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb/signin";
     const client = createOauth2Client(callbackUrl);
 
     const ticket = await client.verifyIdToken({
@@ -72,12 +72,21 @@ exports.googleSignInCallback = async (req, res) => {
 
     const payload = ticket.getPayload();
 
-    console.log("signin");
+    console.log(payload);
 
-    return res.send({ payload });
+    const user = await User.googleSignIn({
+      email: payload.email,
+    });
+
+    if (user.error) {
+      console.log("User not found");
+      return res.status(user.status).send("User not found.");
+    }
+
+    return res.send(user);
   } catch (e) {
     console.log(e);
-    return res.status(500).send({ error: e.message });
+    return res.status(e.status || 500).send(e.message);
   }
 };
 
@@ -86,7 +95,7 @@ exports.googleSignInCallback = async (req, res) => {
 // @access  Public
 exports.googleRegisterCallback = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/callback/register";
+    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb/register";
     const client = createOauth2Client(callbackUrl);
 
     const ticket = await client.verifyIdToken({
@@ -96,12 +105,26 @@ exports.googleRegisterCallback = async (req, res) => {
 
     const payload = ticket.getPayload();
 
-    console.log("register");
+    const user = await User.googleRegistration({
+      avatar: payload.picture,
+      firstName: payload.given_name,
+      lastName: payload.family_name,
+      email: payload.email,
+      emailVerified: payload.email_verified,
+      password: uuid.v4(),
+    });
 
-    return res.send({ payload });
+    if (user.error) {
+      console.log("User not found");
+      return res.status(user.status).send("Could not register user.");
+    }
+
+    console.log(user);
+
+    return res.send(payload);
   } catch (e) {
     console.log(e);
-    return res.status(500).send({ error: e.message });
+    return res.status(e.status || 500).send(e.message);
   }
 };
 
@@ -110,7 +133,7 @@ exports.googleRegisterCallback = async (req, res) => {
 // @access  Private
 exports.googleGmail = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/callback";
+    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb";
     const client = createOauth2Client(callbackUrl);
 
     const authUrl = client.generateAuthUrl({
@@ -122,10 +145,10 @@ exports.googleGmail = async (req, res) => {
       nonce: uuid.v4(),
     });
 
-    return res.send({ url: authUrl });
+    return res.send(authUrl);
   } catch (e) {
     console.log(e);
-    return res.status(500).send({ error: e.message });
+    return res.status(e.status || 500).send(e.message);
   }
 };
 
@@ -134,7 +157,7 @@ exports.googleGmail = async (req, res) => {
 // @access  Public
 exports.googleGmailCallback = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/callback";
+    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb";
     const client = createOauth2Client(callbackUrl);
 
     const { tokens } = await client.getToken(req.body.code);
@@ -182,11 +205,9 @@ exports.googleGmailCallback = async (req, res) => {
       })
     );
 
-    console.log(messageDetails);
-
-    return res.send({ messages: messageDetails });
+    return res.send(messageDetails);
   } catch (e) {
     console.log(e);
-    return res.status(500).send({ error: e.message });
+    return res.status(e.status || 500).send(e.message);
   }
 };

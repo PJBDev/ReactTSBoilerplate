@@ -2,7 +2,6 @@ import React from "react";
 import type { RootState } from "../../../store";
 import styled from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
-import { login, logout } from "../../../store/User";
 
 export default function Home() {
   const user = useSelector((state: RootState) => state.user);

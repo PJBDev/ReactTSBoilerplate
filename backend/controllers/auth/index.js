@@ -9,6 +9,8 @@ exports.register = async (req, res) => {
   try {
     const user = req.body;
 
+    console.log(user);
+
     return res.send({ user });
   } catch (e) {
     console.log(e);

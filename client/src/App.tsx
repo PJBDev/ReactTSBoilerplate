@@ -4,16 +4,19 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Authnetication Routes
+// Public Routes
+import PublicRoute from "./layouts/PublicRoute";
+import Home from "./pages/Public/Home";
+
+// Authentication Routes
 import AuthRoute from "./layouts/AuthRoute";
 import Register from "./pages/Auth/Register";
 import Login from "./pages/Auth/Login";
 import GoogleRegCB from "./pages/Auth/GoogleRegCB";
 import GoogleSignInCB from "./pages/Auth/GoogleSignInCB";
 
-// Public Routes
-import PublicRoute from "./layouts/PublicRoute";
-import Home from "./pages/Public/Home";
+// Onboarding Routes
+import OnboardingRoute from "./layouts/OnboardingRoute";
 
 // Protected Routes
 import ProtectedRoute from "./layouts/ProtectedRoute";
@@ -62,6 +65,11 @@ function App() {
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/google/cb/register" element={<GoogleRegCB />} />
           <Route path="/auth/google/cb/signin" element={<GoogleSignInCB />} />
+        </Route>
+
+        <Route path="/onboarding" element={<OnboardingRoute />}>
+          <Route path="/onboarding/organization" element={<h1>Page A</h1>} />
+          <Route path="/onboarding/invite" element={<h1>Page B</h1>} />
         </Route>
 
         <Route path="/a" element={<ProtectedRoute />}>

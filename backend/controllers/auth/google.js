@@ -1,6 +1,6 @@
 const uuid = require("uuid");
 const jwt = require("jsonwebtoken");
-const { User } = require("../../models");
+const { User, RefreshToken } = require("../../models");
 const { google } = require("googleapis");
 
 const { OAuth2Client } = require("google-auth-library");
@@ -72,8 +72,6 @@ exports.googleSignInCallback = async (req, res) => {
 
     const payload = ticket.getPayload();
 
-    console.log(payload);
-
     const user = await User.googleSignIn({
       email: payload.email,
     });
@@ -83,7 +81,47 @@ exports.googleSignInCallback = async (req, res) => {
       return res.status(user.status).send("User not found.");
     }
 
-    return res.send(user);
+    const accessToken = jwt.sign(
+      {
+        _id: user._id,
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: process.env.JWT_EXPIRES_IN,
+      }
+    );
+
+    const refreshToken = jwt.sign(
+      {
+        _id: user._id,
+      },
+      process.env.REFRESH_TOKEN_SECRET,
+      {
+        expiresIn: process.env.REFRESH_EXPIRES_IN,
+      }
+    );
+
+    // Save refresh token to database
+    const isTokenSaved = await RefreshToken.createRefreshToken(
+      user._id,
+      refreshToken
+    );
+
+    if (isTokenSaved.error) {
+      console.log("Could not save refresh token");
+      return res
+        .status(isTokenSaved.status)
+        .send("Could not save refresh token");
+    }
+
+    res.cookie("refresh_token", refreshToken, {
+      secure: process.env.NODE_ENV !== "development",
+    });
+
+    return res.send({
+      accessToken,
+      user,
+    });
   } catch (e) {
     console.log(e);
     return res.status(e.status || 500).send(e.message);

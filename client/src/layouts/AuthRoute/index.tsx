@@ -2,7 +2,10 @@ import { Navigate, Outlet } from "react-router-dom";
 import styled from "styled-components";
 
 export default function AuthRoute() {
-  if (!localStorage.getItem("isAuth")) {
+  const userString = localStorage.getItem("user") || "";
+  const currentUser = JSON.parse(userString || "{}");
+
+  if (!currentUser.isAuth) {
     return (
       <PageContainer>
         <PageLeft>
@@ -12,6 +15,8 @@ export default function AuthRoute() {
         <PageRight></PageRight>
       </PageContainer>
     );
+  } else if (currentUser.isAuth && !currentUser.organization) {
+    return <Navigate to="/onboarding/organization" />;
   } else {
     return <Navigate to="/a/dashboard" />;
   }

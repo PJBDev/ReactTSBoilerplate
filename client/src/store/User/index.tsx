@@ -12,6 +12,7 @@ export interface UserState {
   avatar: string;
   name: string;
   email: string;
+  isEmailVerified: boolean;
   organization: string;
   loading: boolean;
   isAuth: boolean;
@@ -22,6 +23,7 @@ const initialState: UserState = {
   avatar: "",
   name: "",
   email: "",
+  isEmailVerified: false,
   organization: "",
   loading: false,
   isAuth: false,
@@ -104,7 +106,8 @@ export const googleSignInCB = createAsyncThunk(
     );
 
     if (res.status === 200) {
-      return res.data;
+      localStorage.setItem("accessToken", res.data.accessToken);
+      return res.data.user;
     } else {
       console.log(res.status);
       return res.data;
@@ -159,8 +162,12 @@ export const userSlice = createSlice({
       builder.addCase(action.fulfilled, (state, action) => {
         state.loading = false;
         state._id = action.payload._id;
+        state.avatar = action.payload.avatar;
         state.name = action.payload.name;
         state.email = action.payload.email;
+        state.isEmailVerified = action.payload.isEmailVerified;
+        state.organization = action.payload.organization;
+        state.isAuth = true;
       });
 
       builder.addCase(action.rejected, (state) => {
@@ -192,8 +199,14 @@ export const userSlice = createSlice({
       builder.addCase(action.fulfilled, (state, action) => {
         state.loading = false;
         state._id = action.payload._id;
+        state.avatar = action.payload.avatar;
         state.name = action.payload.name;
         state.email = action.payload.email;
+        state.isEmailVerified = action.payload.isEmailVerified;
+        state.organization = action.payload.organization;
+        state.isAuth = true;
+
+        localStorage.setItem("user", JSON.stringify(state));
       });
 
       builder.addCase(action.rejected, (state) => {

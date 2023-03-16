@@ -225,4 +225,4 @@ leadSchema.statics.updateLeadStatus = async function (id, status, creator) {
   }
 };
 
-exports.Lead = mongoose.model("Lead", leadSchema);
+module.exports = mongoose.model("Lead", leadSchema);

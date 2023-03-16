@@ -64,8 +64,9 @@ exports.protectedRoute = async (req, res, next) => {
       });
   } catch (e) {
     console.log(e.message);
-    res
-      .status(e.response.status || 500)
-      .send({ error: "An error has occured trying to authenticate the user" });
+    res.status(e.response.status || 500).send({
+      error: "Access denied. Invalid token",
+      status: e.response.status,
+    });
   }
 };

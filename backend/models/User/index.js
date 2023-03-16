@@ -3,7 +3,6 @@ const uuid = require("uuid");
 const bcrypt = require("bcrypt");
 const validator = require("mongoose-validator");
 const stripe = require("stripe")(process.env.STRIPE_LIVE_KEY);
-// const { RefreshToken } = require("../RefreshToken");
 
 const nameValidator = [
   validator({
@@ -82,6 +81,12 @@ const userSchema = new mongoose.Schema(
       minlength: 8,
       passwordValidator,
       required: true,
+    },
+    gmailRefreshToken: {
+      type: String,
+    },
+    gmailAccessToken: {
+      type: String,
     },
     organization: {
       type: String,
@@ -227,4 +232,4 @@ userSchema.statics.googleSignIn = async function (profile) {
   }
 };
 
-exports.User = mongoose.model("User", userSchema);
+module.exports = mongoose.model("User", userSchema);

@@ -21,7 +21,7 @@ export default function GoogleSignInCB() {
     const currentUser = JSON.parse(userString || "{}");
 
     if (currentUser.isAuth) {
-      navigate("/a/onboarding/organization");
+      navigate("/onboarding/organization");
     }
   }, [user]);
 

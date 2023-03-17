@@ -4,13 +4,17 @@ export default function ProtectedRoute() {
   const userString = localStorage.getItem("user") || "";
   const currentUser = JSON.parse(userString || "{}");
 
-  if (!currentUser) return <Navigate to="/auth/login" />;
-
   if (currentUser.isAuth && currentUser.organization) {
     return <Outlet />;
-  } else if (currentUser.isAuth && !currentUser.organization) {
-    return <Navigate to="/onboarding/organization" />;
-  } else {
-    return <Navigate to="/auth/login" />;
   }
+
+  if (currentUser.isAuth && !currentUser.organization) {
+    return <Navigate to="/onboarding/organization" />;
+  }
+
+  if (currentUser.isAuth && !currentUser.isEmailVerified) {
+    return <Navigate to="/auth/verify-email" />;
+  }
+
+  return <Navigate to="/auth/login" />;
 }

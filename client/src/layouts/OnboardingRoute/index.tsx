@@ -5,17 +5,22 @@ export default function OnboardingRoute() {
   const userString = localStorage.getItem("user") || "";
   const currentUser = JSON.parse(userString || "{}");
 
-  if (currentUser.isAuth && !currentUser.organization) {
+  const isOnboardingPending = currentUser.isAuth && !currentUser.organization;
+  const isOnboardingComplete = currentUser.isAuth && currentUser.organization;
+
+  if (isOnboardingPending) {
     return (
       <PageContainer>
         <Outlet />
       </PageContainer>
     );
-  } else if (currentUser.isAuth && currentUser.organization) {
-    return <Navigate to="/a/dashboard" />;
-  } else {
-    return <Navigate to="/auth/login" />;
   }
+
+  if (isOnboardingComplete) {
+    return <Navigate to="/a/dashboard" />;
+  }
+
+  return <Navigate to="/auth/login" />;
 }
 
 const PageContainer = styled.div`

@@ -123,12 +123,12 @@ userSchema.methods.toJSON = function () {
 // Login with email and password
 userSchema.statics.standardRegistration = async function (profile) {
   try {
-    const { email, password, firstName, lastName } = profile;
+    const { firstName, lastName, email, password } = profile;
 
     if ([email, password, firstName, lastName].some((field) => !field)) {
-      const err = new Error("All fields are required");
-      err.status = 422;
-      err.message = "All fields are required";
+      const err = new Error("All fields are required.");
+      err.status = 400;
+      err.message = "All fields are required.";
       throw err;
     }
 
@@ -136,9 +136,9 @@ userSchema.statics.standardRegistration = async function (profile) {
     const userExist = await this.findOne({ email: profile.email });
 
     if (userExist) {
-      const err = new Error("User already exists");
+      const err = new Error("User already exists.");
       err.status = 409;
-      err.message = "User already exists";
+      err.message = "User already exists.";
       throw err;
     }
 
@@ -147,13 +147,15 @@ userSchema.statics.standardRegistration = async function (profile) {
       description: "Customer for " + email,
     });
 
-    return this.create({
+    const user = this.create({
       firstName: profile.firstName,
       lastName: profile.lastName,
       email: profile.email,
       password: profile.password || uuid.v4(),
       stripeCustomerId: customer.id,
     });
+
+    return user;
   } catch (error) {
     console.log(error);
     return { error: error.message, status: error.status };
@@ -166,9 +168,9 @@ userSchema.statics.googleRegistration = async function (profile) {
     const { email, firstName, lastName, emailVerified } = profile;
 
     if ([email, firstName, lastName, emailVerified].some((field) => !field)) {
-      const err = new Error("All fields are required");
-      err.status = 422;
-      err.message = "All fields are required";
+      const err = new Error("All fields are required.");
+      err.status = 400;
+      err.message = "All fields are required.";
       throw err;
     }
 
@@ -176,9 +178,9 @@ userSchema.statics.googleRegistration = async function (profile) {
     const userExist = await this.findOne({ email: profile.email });
 
     if (userExist) {
-      const err = new Error("User already exists");
+      const err = new Error("User already exists.");
       err.status = 409;
-      err.message = "User already exists";
+      err.message = "User already exists.";
       throw err;
     }
 
@@ -187,7 +189,7 @@ userSchema.statics.googleRegistration = async function (profile) {
       description: "Customer for " + email,
     });
 
-    return this.create({
+    const user = this.create({
       avatar: profile.avatar,
       firstName: profile.firstName,
       lastName: profile.lastName,
@@ -196,6 +198,45 @@ userSchema.statics.googleRegistration = async function (profile) {
       stripeCustomerId: customer.id,
       password: uuid.v4(),
     });
+
+    return user;
+  } catch (error) {
+    console.log(error);
+    return { error: error.message, status: error.status };
+  }
+};
+
+// Login with email and password
+userSchema.statics.standardLogin = async function (profile) {
+  try {
+    const { email, password } = profile;
+
+    if ([email, password].some((field) => !field)) {
+      const err = new Error("All fields are required.");
+      err.status = 400;
+      err.message = "All fields are required.";
+      throw err;
+    }
+
+    const user = await this.findOne({ email: profile.email });
+
+    if (!user) {
+      const err = new Error("Invalid credentials.");
+      err.status = 404;
+      err.message = "Invalid credentials.";
+      throw err;
+    }
+
+    const isMatch = await bcrypt.compare(profile.password, user.password);
+
+    if (!isMatch) {
+      const err = new Error("Invalid credentials.");
+      err.status = 401;
+      err.message = "Invalid credentials.";
+      throw err;
+    }
+
+    return user;
   } catch (error) {
     console.log(error);
     return { error: error.message, status: error.status };
@@ -208,20 +249,18 @@ userSchema.statics.googleSignIn = async function (profile) {
     const { email } = profile;
 
     if ([email].some((field) => !field)) {
-      const err = new Error("All fields are required");
+      const err = new Error("All fields are required.");
       err.status = 422;
-      err.message = "All fields are required";
+      err.message = "All fields are required.";
       throw err;
     }
 
-    // check if user is already in the database
-    // const user = await this.findOne({ email: profile.email });
     const user = await this.findOne({ email: profile.email });
 
     if (!user) {
-      const err = new Error("User does not exist");
+      const err = new Error("User does not exist.");
       err.status = 404;
-      err.message = "User does not exist";
+      err.message = "User does not exist.";
       throw err;
     }
 

@@ -1,10 +1,11 @@
 import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import CircularProgress from "@mui/material/CircularProgress";
 import type { RootState, AppDispatch } from "../../../store";
 import { registerUser, googleSignUp } from "../../../store/User";
 import { useSelector, useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 import {
   PageContainer,
@@ -27,16 +28,17 @@ import {
 interface Form {
   fullName: string;
   email: string;
-  pw: string;
+  password: string;
 }
 
 export default function Register() {
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user);
   const [formData, setFormData] = React.useState<Form>({
     fullName: "",
     email: "",
-    pw: "",
+    password: "",
   });
 
   // Handle Input Change
@@ -44,6 +46,22 @@ export default function Register() {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleStandardSignUp = (e: any) => {
+    e.preventDefault();
+
+    const [firstName, lastName] = formData.fullName.split(" ");
+
+    if (!firstName || !lastName || !formData.email || !formData.password) {
+      return toast.error("All fields are required.");
+    }
+
+    dispatch(registerUser(formData)).then((res) => {
+      if (res.type === "user/register/fulfilled") {
+        navigate("/auth/verify-email");
+      }
     });
   };
 
@@ -72,7 +90,7 @@ export default function Register() {
                 <span>or</span>
               </OrDiv>
 
-              <AuthForm onSubmit={() => dispatch(registerUser(formData))}>
+              <AuthForm onSubmit={handleStandardSignUp}>
                 <AuthDiv>
                   <AuthLabel>Full Name</AuthLabel>
                   <AuthInput
@@ -100,14 +118,14 @@ export default function Register() {
                   <AuthInput
                     autoComplete="new-password"
                     type="password"
-                    name="pw"
-                    value={formData.pw}
+                    name="password"
+                    value={formData.password}
                     onChange={(e) => handleInputChange(e)}
                   />
                 </AuthDiv>
 
                 <div>
-                  <AuthButton type="submit">Login</AuthButton>
+                  <AuthButton type="submit">Create Account</AuthButton>
                 </div>
               </AuthForm>
 

@@ -1,20 +1,46 @@
 const uuid = require("uuid");
 const jwt = require("jsonwebtoken");
-const { User, RefreshToken } = require("../../models");
+const { User, RefreshToken, VerificationToken } = require("../../models");
+const { sendAccountVerificationEmail } = require("../../utils/automatedEmails");
+const { getJWT } = require("./utils");
 
 // @route   POST /api/auth/register
 // @desc    Registers a new user
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const user = req.body;
+    const { fullName, email, password } = req.body;
+    const [firstName, lastName] = fullName.split(" ");
 
-    console.log(user);
+    const profile = {
+      firstName,
+      lastName,
+      email,
+      password,
+    };
 
-    return res.send({ user });
+    const user = await User.standardRegistration(profile);
+
+    if (!user || user.error) {
+      return res
+        .status(user.status || 500)
+        .send(user.error || "Could not register user.");
+    }
+
+    const token = await VerificationToken.generateToken(user._id);
+
+    if (!token || token.error) {
+      return res
+        .status(token.status || 500)
+        .send(token.error || "Could not generate verification token.");
+    }
+
+    await sendAccountVerificationEmail(user.firstName, user.email, token._id);
+
+    return res.send(user.toJSON());
   } catch (e) {
     console.log(e);
-    return res.status(e.status || 500).send({ error: e.message });
+    return res.status(e.status || 500).send(e.message);
   }
 };
 
@@ -23,12 +49,39 @@ exports.register = async (req, res) => {
 // @access  Public
 exports.login = async (req, res) => {
   try {
-    const user = req.body;
+    const user = await User.standardLogin(req.body);
 
-    return res.send({ user });
+    if (!user || user.error) {
+      return res
+        .status(user.status || 500)
+        .send(user.error || "Invalid credentials.");
+    }
+
+    // Omit access token if user has not verified their email
+    if (!user.isEmailVerified) {
+      return res.status(200).send({
+        user: user.toJSON(),
+        message: "Please verify your email address.",
+      });
+    }
+
+    const { accessToken, refreshToken } = await getJWT(user);
+
+    if (!accessToken || !refreshToken) {
+      return res.status(500).send("Could not generate tokens.");
+    }
+
+    res.cookie("refresh_token", refreshToken, {
+      secure: process.env.NODE_ENV !== "development",
+    });
+
+    return res.send({
+      accessToken,
+      user: user.toJSON(),
+    });
   } catch (e) {
     console.log(e);
-    return res.status(e.status || 500).send({ error: e.message });
+    return res.status(e.status || 500).send(e.message);
   }
 };
 
@@ -94,6 +147,6 @@ exports.refreshToken = async (req, res) => {
     );
   } catch (e) {
     console.log(e);
-    return res.status(e.status || 500).send({ error: e.message });
+    return res.status(e.status || 500).send(e.message);
   }
 };

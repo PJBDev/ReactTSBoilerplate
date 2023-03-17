@@ -1,10 +1,11 @@
 import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import CircularProgress from "@mui/material/CircularProgress";
 import type { RootState, AppDispatch } from "../../../store";
 import { loginUser, googleSignIn } from "../../../store/User";
 import { useSelector, useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 import {
   PageContainer,
@@ -26,15 +27,16 @@ import {
 
 interface Form {
   email: string;
-  pw: string;
+  password: string;
 }
 
 export default function Login() {
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user);
   const [formData, setFormData] = React.useState<Form>({
     email: "",
-    pw: "",
+    password: "",
   });
 
   // Handle Input Change
@@ -42,6 +44,31 @@ export default function Login() {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleStandardLogin = (e: any) => {
+    e.preventDefault();
+
+    if (!formData.email || !formData.password) {
+      return toast.error("All fields are required.");
+    }
+
+    dispatch(loginUser(formData)).then((res) => {
+      const isEmailVerified = res.payload.user.isEmailVerified;
+      const isDoneOnboarding = res.payload.user.organization;
+
+      if (!isEmailVerified) {
+        return navigate("/auth/verify-email");
+      }
+
+      if (isEmailVerified && !isDoneOnboarding) {
+        return navigate("/onboarding/organization");
+      }
+
+      if (isEmailVerified) {
+        return navigate("/a/dashboard");
+      }
     });
   };
 
@@ -69,7 +96,7 @@ export default function Login() {
                 <span>or</span>
               </OrDiv>
 
-              <AuthForm onSubmit={() => dispatch(loginUser(formData))}>
+              <AuthForm onSubmit={handleStandardLogin}>
                 <AuthDiv>
                   <AuthLabel>Email</AuthLabel>
                   <AuthInput
@@ -86,8 +113,8 @@ export default function Login() {
                   <AuthInput
                     autoComplete="new-password"
                     type="password"
-                    name="pw"
-                    value={formData.pw}
+                    name="password"
+                    value={formData.password}
                     onChange={(e) => handleInputChange(e)}
                   />
                 </AuthDiv>

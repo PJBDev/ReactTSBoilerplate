@@ -3,9 +3,10 @@ import {
   createAsyncThunk,
   createSlice,
 } from "@reduxjs/toolkit";
+import { useNavigate } from "react-router-dom";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export interface UserState {
   _id: string;
@@ -31,75 +32,94 @@ const initialState: UserState = {
 
 interface SignInForm {
   email: string;
-  pw: string;
+  password: string;
 }
 
 interface RegisterForm {
   fullName: string;
   email: string;
-  pw: string;
+  password: string;
 }
 
 // Standard Auth
-// Login User
-export const loginUser = createAsyncThunk(
-  "user/login",
-  async (signInForm: SignInForm) => {
-    const res = await axios.post(
-      `${process.env.REACT_APP_API_URL}/auth/login`,
-      signInForm
-    );
-
-    console.log(res.data);
-    return res.data;
-  }
-);
-
 // Register User
 export const registerUser = createAsyncThunk(
   "user/register",
-  async (registerForm: RegisterForm) => {
+  async (registerForm: RegisterForm, { rejectWithValue }) => {
     const res = await axios.post(
       `${process.env.REACT_APP_API_URL}/auth/register`,
       registerForm
     );
 
-    console.log(res.data);
-    return res.data;
+    if (res.status === 200) {
+      return res.data;
+    } else {
+      toast.error(res.data);
+      return rejectWithValue(res.data);
+    }
+  }
+);
+
+// Login User
+export const loginUser = createAsyncThunk(
+  "user/login",
+  async (signInForm: SignInForm, { rejectWithValue }) => {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/auth/login`,
+      signInForm
+    );
+
+    if (res.status === 200) {
+      if (res.data.user.isEmailVerified) {
+        return res.data;
+      } else {
+        toast.error("Please verify your email address.");
+        return rejectWithValue(res.data);
+      }
+    } else {
+      toast.error(res.data);
+      return rejectWithValue(res.data);
+    }
   }
 );
 
 // Google Auth
 // Google Sign In
-export const googleSignIn = createAsyncThunk("user/googleSignIn", async () => {
-  const res = await axios.post(
-    `${process.env.REACT_APP_API_URL}/auth/google/signin`
-  );
+export const googleSignIn = createAsyncThunk(
+  "user/googleSignIn",
+  async (any, { rejectWithValue }) => {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/auth/google/signin`
+    );
 
-  if (res.status === 200) {
-    return (window.location.href = res.data);
-  } else {
-    return res.data;
+    if (res.status === 200) {
+      return (window.location.href = res.data);
+    } else {
+      return rejectWithValue(res.data);
+    }
   }
-});
+);
 
 // Google Sign Up
-export const googleSignUp = createAsyncThunk("user/googleSignUp", async () => {
-  const res = await axios.post(
-    `${process.env.REACT_APP_API_URL}/auth/google/register`
-  );
+export const googleSignUp = createAsyncThunk(
+  "user/googleSignUp",
+  async (any, { rejectWithValue }) => {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/auth/google/register`
+    );
 
-  if (res.status === 200) {
-    return (window.location.href = res.data);
-  } else {
-    return res.data;
+    if (res.status === 200) {
+      return (window.location.href = res.data);
+    } else {
+      return rejectWithValue(res.data);
+    }
   }
-});
+);
 
 // Google Sign In Callback
 export const googleSignInCB = createAsyncThunk(
   "user/googleSignInCB",
-  async (idToken: string | null) => {
+  async (idToken: string | null, { rejectWithValue }) => {
     const res = await axios.post(
       `${process.env.REACT_APP_API_URL}/auth/google/cb/signin`,
       { idToken }
@@ -109,8 +129,7 @@ export const googleSignInCB = createAsyncThunk(
       localStorage.setItem("accessToken", res.data.accessToken);
       return res.data.user;
     } else {
-      console.log(res.status);
-      return res.data;
+      return rejectWithValue(res.data);
     }
   }
 );
@@ -118,7 +137,7 @@ export const googleSignInCB = createAsyncThunk(
 // Google Sign Up Callback
 export const googleSignUpCB = createAsyncThunk(
   "user/googleSignUpCB",
-  async (idToken: string | null) => {
+  async (idToken: string | null, { rejectWithValue }) => {
     const res = await axios.post(
       `${process.env.REACT_APP_API_URL}/auth/google/cb/register`,
       { idToken }
@@ -127,8 +146,7 @@ export const googleSignUpCB = createAsyncThunk(
     if (res.status === 200) {
       return res.data;
     } else {
-      console.log(res.status);
-      return res.data;
+      return rejectWithValue(res.data);
     }
   }
 );
@@ -152,27 +170,41 @@ export const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     // Standard Auth
-    const localActions = [loginUser, registerUser];
+    // Login User
+    builder.addCase(loginUser.pending, (state) => {
+      state.loading = true;
+    });
 
-    localActions.forEach((action) => {
-      builder.addCase(action.pending, (state) => {
-        state.loading = true;
-      });
+    builder.addCase(loginUser.fulfilled, (state, action) => {
+      state.loading = false;
+      state._id = action.payload._id;
+      state.avatar = action.payload.avatar;
+      state.name = action.payload.name;
+      state.email = action.payload.email;
+      state.isEmailVerified = action.payload.isEmailVerified;
+      state.organization = action.payload.organization;
+      state.isAuth = true;
+      localStorage.setItem("user", JSON.stringify(state));
+      localStorage.setItem("accessToken", action.payload.accessToken);
+    });
 
-      builder.addCase(action.fulfilled, (state, action) => {
-        state.loading = false;
-        state._id = action.payload._id;
-        state.avatar = action.payload.avatar;
-        state.name = action.payload.name;
-        state.email = action.payload.email;
-        state.isEmailVerified = action.payload.isEmailVerified;
-        state.organization = action.payload.organization;
-        state.isAuth = true;
-      });
+    builder.addCase(loginUser.rejected, (state) => {
+      state.loading = false;
+      localStorage.setItem("user", "{}");
+    });
 
-      builder.addCase(action.rejected, (state) => {
-        state.loading = false;
-      });
+    // Register User
+    builder.addCase(registerUser.pending, (state) => {
+      state.loading = true;
+    });
+
+    builder.addCase(registerUser.fulfilled, (state) => {
+      state.loading = false;
+    });
+
+    builder.addCase(registerUser.rejected, (state) => {
+      state.loading = false;
+      localStorage.setItem("user", "{}");
     });
 
     // Google Auth
@@ -211,6 +243,7 @@ export const userSlice = createSlice({
 
       builder.addCase(action.rejected, (state) => {
         state.loading = false;
+        localStorage.setItem("user", "{}");
       });
     });
   },

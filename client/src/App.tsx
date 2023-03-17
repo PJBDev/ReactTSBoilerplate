@@ -14,6 +14,8 @@ import Register from "./pages/Auth/Register";
 import Login from "./pages/Auth/Login";
 import GoogleRegCB from "./pages/Auth/GoogleRegCB";
 import GoogleSignInCB from "./pages/Auth/GoogleSignInCB";
+import VerifyEmail from "./pages/Auth/VerifyEmail";
+import ResendEmail from "./pages/Auth/ResendEmail";
 
 // Onboarding Routes
 import OnboardingRoute from "./layouts/OnboardingRoute";
@@ -25,6 +27,8 @@ function App() {
   // Add the authorization header to every request if it exists
   axios.interceptors.request.use(
     async (config) => {
+      config.withCredentials = true;
+
       const accessToken = localStorage.getItem("accessToken");
 
       if (accessToken) {
@@ -63,6 +67,8 @@ function App() {
         <Route path="/auth" element={<AuthRoute />}>
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/verify-email" element={<VerifyEmail />} />
+          <Route path="/auth/resend-email" element={<ResendEmail />} />
           <Route path="/auth/google/cb/register" element={<GoogleRegCB />} />
           <Route path="/auth/google/cb/signin" element={<GoogleSignInCB />} />
         </Route>

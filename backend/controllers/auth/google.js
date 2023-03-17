@@ -2,6 +2,7 @@ const uuid = require("uuid");
 const jwt = require("jsonwebtoken");
 const { User, RefreshToken } = require("../../models");
 const { google } = require("googleapis");
+const { getJWT } = require("./utils");
 
 const { OAuth2Client } = require("google-auth-library");
 
@@ -18,7 +19,7 @@ const createOauth2Client = (redirectUrl) => {
 // @access  Public
 exports.googleSignIn = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb/signin";
+    const callbackUrl = `${process.env.PRODUCTION_URL}/auth/google/cb/signin`;
     const client = createOauth2Client(callbackUrl);
 
     const authUrl = client.generateAuthUrl({
@@ -40,7 +41,7 @@ exports.googleSignIn = async (req, res) => {
 // @access  Public
 exports.googleRegister = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb/register";
+    const callbackUrl = `${process.env.PRODUCTION_URL}/auth/google/cb/register`;
     const client = createOauth2Client(callbackUrl);
 
     const authUrl = client.generateAuthUrl({
@@ -62,7 +63,7 @@ exports.googleRegister = async (req, res) => {
 // @access  Public
 exports.googleSignInCallback = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb/signin";
+    const callbackUrl = `${process.env.PRODUCTION_URL}/auth/google/cb/signin`;
     const client = createOauth2Client(callbackUrl);
 
     const ticket = await client.verifyIdToken({
@@ -76,43 +77,12 @@ exports.googleSignInCallback = async (req, res) => {
       email: payload.email,
     });
 
-    if (user.error) {
+    if (!user || user.error) {
       console.log("User not found");
-      return res.status(user.status).send("User not found.");
+      return res.status(user.status || 500).send("User not found.");
     }
 
-    const accessToken = jwt.sign(
-      {
-        _id: user._id,
-      },
-      process.env.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: process.env.JWT_EXPIRES_IN,
-      }
-    );
-
-    const refreshToken = jwt.sign(
-      {
-        _id: user._id,
-      },
-      process.env.REFRESH_TOKEN_SECRET,
-      {
-        expiresIn: process.env.REFRESH_EXPIRES_IN,
-      }
-    );
-
-    // Save refresh token to database
-    const isTokenSaved = await RefreshToken.createRefreshToken(
-      user._id,
-      refreshToken
-    );
-
-    if (isTokenSaved.error) {
-      console.log("Could not save refresh token");
-      return res
-        .status(isTokenSaved.status)
-        .send("Could not save refresh token");
-    }
+    const { accessToken, refreshToken } = getJWT(user);
 
     res.cookie("refresh_token", refreshToken, {
       secure: process.env.NODE_ENV !== "development",
@@ -120,7 +90,7 @@ exports.googleSignInCallback = async (req, res) => {
 
     return res.send({
       accessToken,
-      user,
+      user: user.toJSON(),
     });
   } catch (e) {
     console.log(e);
@@ -133,7 +103,7 @@ exports.googleSignInCallback = async (req, res) => {
 // @access  Public
 exports.googleRegisterCallback = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb/register";
+    const callbackUrl = `${process.env.PRODUCTION_URL}/auth/google/cb/register`;
     const client = createOauth2Client(callbackUrl);
 
     const ticket = await client.verifyIdToken({
@@ -152,14 +122,21 @@ exports.googleRegisterCallback = async (req, res) => {
       password: uuid.v4(),
     });
 
-    if (user.error) {
+    if (!user || user.error) {
       console.log("User not found");
-      return res.status(user.status).send("Could not register user.");
+      return res.status(user.status || 500).send("Could not register user.");
     }
 
-    console.log(user);
+    const { accessToken, refreshToken } = getJWT(user);
 
-    return res.send(payload);
+    res.cookie("refresh_token", refreshToken, {
+      secure: process.env.NODE_ENV !== "development",
+    });
+
+    return res.send({
+      accessToken,
+      user: user.toJSON(),
+    });
   } catch (e) {
     console.log(e);
     return res.status(e.status || 500).send(e.message);
@@ -171,7 +148,7 @@ exports.googleRegisterCallback = async (req, res) => {
 // @access  Private
 exports.googleGmail = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb";
+    const callbackUrl = `${process.env.PRODUCTION_URL}/auth/google/cb`;
     const client = createOauth2Client(callbackUrl);
 
     const authUrl = client.generateAuthUrl({
@@ -195,7 +172,7 @@ exports.googleGmail = async (req, res) => {
 // @access  Public
 exports.googleGmailCallback = async (req, res) => {
   try {
-    const callbackUrl = "http://127.0.0.1:3000/auth/google/cb";
+    const callbackUrl = `${process.env.PRODUCTION_URL}/auth/google/cb`;
     const client = createOauth2Client(callbackUrl);
 
     const { tokens } = await client.getToken(req.body.code);

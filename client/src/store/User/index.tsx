@@ -164,6 +164,7 @@ export const googleSignUpCB = createAsyncThunk(
     if (res.status === 200) {
       return res.data;
     } else {
+      toast.error(res.data);
       return rejectWithValue(res.data);
     }
   }

@@ -123,8 +123,10 @@ exports.googleRegisterCallback = async (req, res) => {
     });
 
     if (!user || user.error) {
-      console.log("User not found");
-      return res.status(user.status || 500).send("Could not register user.");
+      console.log(user);
+      return res
+        .status(user.status || 500)
+        .send(user.error || "Could not register user.");
     }
 
     const { accessToken, refreshToken } = getJWT(user);

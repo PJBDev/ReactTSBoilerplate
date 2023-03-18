@@ -14,11 +14,13 @@ import Register from "./pages/Auth/Register";
 import Login from "./pages/Auth/Login";
 import GoogleRegCB from "./pages/Auth/GoogleRegCB";
 import GoogleSignInCB from "./pages/Auth/GoogleSignInCB";
-import VerifyEmail from "./pages/Auth/VerifyEmail";
+import VerifyEmailSent from "./pages/Auth/VerifyEmailSent";
 import ResendEmail from "./pages/Auth/ResendEmail";
+import VerifyEmail from "./pages/Auth/VerifyEmail";
 
 // Onboarding Routes
 import OnboardingRoute from "./layouts/OnboardingRoute";
+import Organization from "./pages/Onboarding/Organization";
 
 // Protected Routes
 import ProtectedRoute from "./layouts/ProtectedRoute";
@@ -67,6 +69,7 @@ function App() {
         <Route path="/auth" element={<AuthRoute />}>
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/verify-email-sent" element={<VerifyEmailSent />} />
           <Route path="/auth/verify-email" element={<VerifyEmail />} />
           <Route path="/auth/resend-email" element={<ResendEmail />} />
           <Route path="/auth/google/cb/register" element={<GoogleRegCB />} />
@@ -74,7 +77,7 @@ function App() {
         </Route>
 
         <Route path="/onboarding" element={<OnboardingRoute />}>
-          <Route path="/onboarding/organization" element={<h1>Page A</h1>} />
+          <Route path="/onboarding/organization" element={<Organization />} />
           <Route path="/onboarding/invite" element={<h1>Page B</h1>} />
         </Route>
 

@@ -60,7 +60,7 @@ export default function Register() {
 
     dispatch(registerUser(formData)).then((res) => {
       if (res.type === "user/register/fulfilled") {
-        navigate("/auth/verify-email");
+        navigate("/auth/verify-email-sent");
       }
     });
   };

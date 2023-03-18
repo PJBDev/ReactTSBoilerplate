@@ -83,6 +83,24 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// Verify Email
+export const verifyEmail = createAsyncThunk(
+  "user/verifyEmail",
+  async (token: string | null, { rejectWithValue }) => {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/auth/verify-email`,
+      { token }
+    );
+
+    if (res.status === 200) {
+      return res.data;
+    } else {
+      toast.error(res.data);
+      return rejectWithValue(res.data);
+    }
+  }
+);
+
 // Google Auth
 // Google Sign In
 export const googleSignIn = createAsyncThunk(
@@ -170,6 +188,20 @@ export const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     // Standard Auth
+    // Register User
+    builder.addCase(registerUser.pending, (state) => {
+      state.loading = true;
+    });
+
+    builder.addCase(registerUser.fulfilled, (state) => {
+      state.loading = false;
+    });
+
+    builder.addCase(registerUser.rejected, (state) => {
+      state.loading = false;
+      localStorage.setItem("user", "{}");
+    });
+
     // Login User
     builder.addCase(loginUser.pending, (state) => {
       state.loading = true;
@@ -193,16 +225,25 @@ export const userSlice = createSlice({
       localStorage.setItem("user", "{}");
     });
 
-    // Register User
-    builder.addCase(registerUser.pending, (state) => {
+    // Verify Email
+    builder.addCase(verifyEmail.pending, (state) => {
       state.loading = true;
     });
 
-    builder.addCase(registerUser.fulfilled, (state) => {
+    builder.addCase(verifyEmail.fulfilled, (state, action) => {
       state.loading = false;
+      state._id = action.payload._id;
+      state.avatar = action.payload.avatar;
+      state.name = action.payload.name;
+      state.email = action.payload.email;
+      state.isEmailVerified = action.payload.isEmailVerified;
+      state.organization = action.payload.organization;
+      state.isAuth = true;
+      localStorage.setItem("user", JSON.stringify(state));
+      localStorage.setItem("accessToken", action.payload.accessToken);
     });
 
-    builder.addCase(registerUser.rejected, (state) => {
+    builder.addCase(verifyEmail.rejected, (state) => {
       state.loading = false;
       localStorage.setItem("user", "{}");
     });

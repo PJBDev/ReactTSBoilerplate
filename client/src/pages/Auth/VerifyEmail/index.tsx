@@ -1,41 +1,88 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import CircularProgress from "@mui/material/CircularProgress";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
+import MailLockIcon from "@mui/icons-material/MailLock";
+import { toast } from "react-toastify";
 import type { RootState, AppDispatch } from "../../../store";
 import { useSelector, useDispatch } from "react-redux";
+import { verifyEmail } from "../../../store/User";
 
-export default function VerifyEmail() {
+export default function VerifyEmailSent() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user);
 
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("token");
+
+    if (!token) {
+      toast.error("Invalid token or token expired.");
+    }
+
+    dispatch(verifyEmail(token)).then((res) => {
+      if (res.type === "user/verifyEmail/fulfilled") {
+        toast.success("Email verified successfully.");
+        navigate("/auth/login");
+      } else {
+        toast.error("Invalid link or link expired.");
+      }
+    });
+  }, []);
+
   return (
     <>
-      <VerifyContainer>
-        <VerifyHeader>
-          <MarkEmailReadIcon sx={{ fontSize: 50, color: "#1a91da" }} />
-          <h2>Please verify your email</h2>
-        </VerifyHeader>
+      {user.loading && (
+        <VerifyContainer>
+          <CircularProgress />
+          <h3>Verifying your email address....</h3>
+        </VerifyContainer>
+      )}
 
-        <VerifyBody>
-          <p>
-            We've sent you an email to verify your account. Please click the
-            link in the email to verify your email address.
-          </p>
+      {!user.loading && user.isEmailVerified && (
+        <VerifyContainer>
+          <VerifyHeader>
+            <MarkEmailReadIcon sx={{ fontSize: 50, color: "#1a91da" }} />
+            <h2>Email Verified</h2>
+          </VerifyHeader>
 
-          <span>
-            If you don't see the email, please check your spam folder.
-          </span>
-        </VerifyBody>
+          <VerifyBody>
+            <p>
+              Congratulations your email address has been verified. You can now
+              login to your account.
+            </p>
+          </VerifyBody>
 
-        <VerifyFooter>
-          <p>Didn't receive an email?</p>
-          <VerifyButton onClick={() => navigate("/auth/resend-email")}>
-            Resend Email
-          </VerifyButton>
-        </VerifyFooter>
-      </VerifyContainer>
+          <VerifyFooter>
+            <VerifyButton onClick={() => navigate("/auth/login")}>
+              Login
+            </VerifyButton>
+          </VerifyFooter>
+        </VerifyContainer>
+      )}
+
+      {!user.loading && !user.isEmailVerified && (
+        <VerifyContainer>
+          <VerifyHeader>
+            <MailLockIcon sx={{ fontSize: 50, color: "#1a91da" }} />
+            <h2>Invalid Token.</h2>
+          </VerifyHeader>
+
+          <VerifyBody>
+            <p>
+              Sorry, we couldn't verify your email address. The verification
+              link may have expired.
+            </p>
+          </VerifyBody>
+
+          <VerifyFooter>
+            <VerifyButton onClick={() => navigate("/auth/resend-email")}>
+              Resend Email
+            </VerifyButton>
+          </VerifyFooter>
+        </VerifyContainer>
+      )}
     </>
   );
 }

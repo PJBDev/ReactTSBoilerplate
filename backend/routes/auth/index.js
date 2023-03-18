@@ -13,4 +13,9 @@ router.post("/register", authController.register);
 // @access  Public
 router.post("/login", authController.login);
 
+// @route   POST /api/auth/verify-email
+// @desc    Verify a user's email address
+// @access  Public
+router.post("/verify-email", authController.verifyEmail);
+
 module.exports = router;

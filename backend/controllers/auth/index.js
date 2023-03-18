@@ -85,6 +85,45 @@ exports.login = async (req, res) => {
   }
 };
 
+// @route   POST /api/auth/verify-email
+// @desc    Verifies a users email address
+// @access  Public
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).send("No token provided.");
+    }
+
+    const verificationToken = await VerificationToken.checkToken(token);
+
+    if (!verificationToken || verificationToken.error) {
+      return res
+        .status(verificationToken.status || 500)
+        .send(
+          verificationToken.error ||
+            "Could not verify email address. Please try again."
+        );
+    }
+
+    const user = await User.findOneAndUpdate(
+      { _id: verificationToken.owner },
+      { isEmailVerified: true },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(500).send("Could not verify email address.");
+    }
+
+    return res.send(user.toJSON());
+  } catch (e) {
+    console.log(e);
+    return res.status(e.status || 500).send(e.message);
+  }
+};
+
 // @route   POST /api/auth/refresh-token
 // @desc    Refreshes a users access token
 // @access  Public

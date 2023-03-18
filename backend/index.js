@@ -20,15 +20,7 @@ const rateLimiter = rateLimit({
 
 app.use(
   cors({
-    origin: [
-      process.env.DEVELOPMENT_URL,
-      process.env.PRODUCTION_URL,
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      "http://localhost:5000",
-      "http://127.0.0.1:5000",
-    ],
-    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept"],
+    origin: [process.env.DEVELOPMENT_URL, process.env.PRODUCTION_URL],
     credentials: true,
   })
 );

@@ -59,7 +59,7 @@ export default function Login() {
       const isDoneOnboarding = res.payload.user.organization;
 
       if (!isEmailVerified) {
-        return navigate("/auth/verify-email");
+        return navigate("/auth/verify-email-sent");
       }
 
       if (isEmailVerified && !isDoneOnboarding) {

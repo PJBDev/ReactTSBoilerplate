@@ -26,6 +26,8 @@ export default function OnboardingRoute() {
 const PageContainer = styled.div`
   display: flex;
   flex-direction: row;
+  align-items: center;
+  justify-content: center;
   height: 100vh;
 
   @media screen and (max-width: 768px) {

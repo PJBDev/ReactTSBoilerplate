@@ -23,6 +23,7 @@ import {
   LinkText,
   GoogleButton,
   OrDiv,
+  AuthLine,
 } from "../styles";
 
 interface Form {
@@ -82,19 +83,8 @@ export default function Login() {
             <>
               <AuthHeader>
                 <h2>Welcome Back</h2>
+                <p>Sign in to your account</p>
               </AuthHeader>
-
-              <GoogleButton onClick={() => dispatch(googleSignIn())}>
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
-                  alt="Google Logo"
-                />
-                <p>Sign in with Google</p>
-              </GoogleButton>
-
-              <OrDiv>
-                <span>or</span>
-              </OrDiv>
 
               <AuthForm onSubmit={handleStandardLogin}>
                 <AuthDiv>
@@ -119,10 +109,22 @@ export default function Login() {
                   />
                 </AuthDiv>
 
+                <AuthLine>
+                  <Link to={"/auth/forgot-password"}>Forgot Password?</Link>
+                </AuthLine>
+
                 <div>
                   <AuthButton type="submit">Login</AuthButton>
                 </div>
               </AuthForm>
+
+              <GoogleButton onClick={() => dispatch(googleSignIn())}>
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+                  alt="Google Logo"
+                />
+                <p>Sign in with Google</p>
+              </GoogleButton>
 
               <AuthFooter>
                 <p>

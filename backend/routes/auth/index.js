@@ -18,4 +18,22 @@ router.post("/login", authController.login);
 // @access  Public
 router.post("/verify-email", authController.verifyEmail);
 
+// @route   POST /api/auth/resend-verification-email
+// @desc    Resend a user's verification email
+// @access  Public
+router.post(
+  "/resend-verification-email",
+  authController.resendVerificationEmail
+);
+
+// @route   POST /api/auth/forgot-password
+// @desc    Send a password reset email to a user
+// @access  Public
+router.post("/forgot-password", authController.forgotPassword);
+
+// @route   POST /api/auth/reset-password
+// @desc    Reset a user's password
+// @access  Public
+router.post("/reset-password", authController.resetPassword);
+
 module.exports = router;

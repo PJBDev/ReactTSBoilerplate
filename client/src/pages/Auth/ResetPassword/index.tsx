@@ -1,67 +1,94 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import MarkEmailUnreadIcon from "@mui/icons-material/MarkEmailUnread";
 import type { RootState, AppDispatch } from "../../../store";
 import { useSelector, useDispatch } from "react-redux";
-import { resendVerificationEmail } from "../../../store/User";
+import { resetPassword } from "../../../store/User";
 import { toast } from "react-toastify";
 
 import { AuthInput, AuthDiv, AuthLabel } from "../styles";
 
-export default function ResendEmail() {
+export default function ResetPassword() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user);
   const [formData, setFormData] = useState({
-    email: "",
+    password: "",
+    confirmPassword: "",
+    token: "",
   });
 
-  const handleResendEmail = (e: any) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
 
-    if (!formData.email) {
-      return toast.error("Email is required.");
+    if (!formData.password) {
+      return toast.error("Password is required.");
     }
 
-    dispatch(resendVerificationEmail(formData.email)).then((res) => {
-      if (res.type === "user/resendVerificationEmail/fulfilled") {
-        toast.success("Email sent.");
+    if (!formData.confirmPassword) {
+      return toast.error("Confirm password is required.");
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      return toast.error("Passwords do not match.");
+    }
+
+    dispatch(resetPassword(formData)).then((res) => {
+      if (res.type === "user/resetPassword/fulfilled") {
+        toast.success("Password reset successfully.");
         return navigate("/auth/login");
       } else {
-        toast.error("Email not sent.");
+        toast.error("Password not reset.");
       }
     });
   };
 
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("token");
+
+    if (token) {
+      setFormData({ ...formData, token });
+    }
+  }, []);
+
   return (
     <>
       <VerifyContainer>
-        <VerifyForm onSubmit={handleResendEmail}>
+        <VerifyForm onSubmit={handleSubmit}>
           <VerifyHeader>
             <MarkEmailUnreadIcon sx={{ fontSize: 50, color: "#1a91da" }} />
-            <h2>Resend Email Verification</h2>
+            <h2>Forgot Password</h2>
           </VerifyHeader>
 
           <VerifyBody>
             <AuthDiv>
-              <AuthLabel>
-                Please enter the email address you used to signup.
-              </AuthLabel>
+              <AuthLabel>Password</AuthLabel>
               <AuthInput
                 autoComplete="new-password"
-                type="email"
-                name="email"
-                value={formData.email}
+                type="password"
+                name="password"
+                value={formData.password}
                 onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
+                  setFormData({ ...formData, password: e.target.value })
+                }
+              />
+
+              <AuthLabel>Confirm Password</AuthLabel>
+              <AuthInput
+                autoComplete="new-password"
+                type="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={(e) =>
+                  setFormData({ ...formData, confirmPassword: e.target.value })
                 }
               />
             </AuthDiv>
           </VerifyBody>
 
           <VerifyFooter>
-            <VerifyButton>Resend Email</VerifyButton>
+            <VerifyButton>Reset Password</VerifyButton>
           </VerifyFooter>
         </VerifyForm>
       </VerifyContainer>

@@ -162,6 +162,74 @@ userSchema.statics.standardRegistration = async function (profile) {
   }
 };
 
+// Login with email and password
+userSchema.statics.standardLogin = async function (profile) {
+  try {
+    const { email, password } = profile;
+
+    if ([email, password].some((field) => !field)) {
+      const err = new Error("All fields are required.");
+      err.status = 400;
+      err.message = "All fields are required.";
+      throw err;
+    }
+
+    const user = await this.findOne({ email: profile.email });
+
+    if (!user) {
+      const err = new Error("Invalid credentials.");
+      err.status = 404;
+      err.message = "Invalid credentials.";
+      throw err;
+    }
+
+    const isMatch = await bcrypt.compare(profile.password, user.password);
+
+    if (!isMatch) {
+      const err = new Error("Invalid credentials.");
+      err.status = 401;
+      err.message = "Invalid credentials.";
+      throw err;
+    }
+
+    return user;
+  } catch (error) {
+    console.log(error);
+    return { error: error.message, status: error.status };
+  }
+};
+
+// change password
+userSchema.statics.updatePassword = async function (profile) {
+  try {
+    const { _id, password } = profile;
+
+    if ([_id, password].some((field) => !field)) {
+      const err = new Error("All fields are required.");
+      err.status = 400;
+      err.message = "All fields are required.";
+      throw err;
+    }
+
+    const user = await this.findOne({ _id });
+
+    if (!user) {
+      const err = new Error("Invalid credentials.");
+      err.status = 404;
+      err.message = "Invalid credentials.";
+      throw err;
+    }
+
+    user.password = password;
+    await user.save();
+
+    return user;
+  } catch (error) {
+    console.log(error);
+    return { error: error.message, status: error.status };
+  }
+};
+
 // Sign up with Google
 userSchema.statics.googleRegistration = async function (profile) {
   try {
@@ -198,43 +266,6 @@ userSchema.statics.googleRegistration = async function (profile) {
       stripeCustomerId: customer.id,
       password: uuid.v4(),
     });
-
-    return user;
-  } catch (error) {
-    console.log(error);
-    return { error: error.message, status: error.status };
-  }
-};
-
-// Login with email and password
-userSchema.statics.standardLogin = async function (profile) {
-  try {
-    const { email, password } = profile;
-
-    if ([email, password].some((field) => !field)) {
-      const err = new Error("All fields are required.");
-      err.status = 400;
-      err.message = "All fields are required.";
-      throw err;
-    }
-
-    const user = await this.findOne({ email: profile.email });
-
-    if (!user) {
-      const err = new Error("Invalid credentials.");
-      err.status = 404;
-      err.message = "Invalid credentials.";
-      throw err;
-    }
-
-    const isMatch = await bcrypt.compare(profile.password, user.password);
-
-    if (!isMatch) {
-      const err = new Error("Invalid credentials.");
-      err.status = 401;
-      err.message = "Invalid credentials.";
-      throw err;
-    }
 
     return user;
   } catch (error) {

@@ -57,8 +57,6 @@ verificationTokenSchema.statics.checkToken = async function (token) {
       throw err;
     }
 
-    console.log(verificationToken);
-
     return verificationToken;
   } catch (error) {
     console.log(error);

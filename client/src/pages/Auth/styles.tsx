@@ -20,6 +20,7 @@ export const AuthHeader = styled.div`
   justify-content: flex-start;
   align-items: flex-start;
   width: 100%;
+  margin-bottom: 20px;
 
   h2 {
     font-size: 2rem;
@@ -40,7 +41,7 @@ export const GoogleButton = styled.button`
   align-items: center;
   gap: 20px;
   width: 100%;
-  height: 50px;
+  height: 40px;
   border: 1px solid #eaeaea;
   border-radius: 5px;
   background: none;
@@ -97,6 +98,23 @@ export const AuthTextDiv = styled.div`
   }
 `;
 
+export const AuthLine = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex: 45%;
+  color: #1d9bf0;
+  width: fit-content;
+  transition: all 0.2s ease-in-out;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  &:hover {
+    color: #a3a3a3;
+  }
+`;
+
 export const AuthForm = styled.form`
   display: flex;
   flex-direction: column;
@@ -143,6 +161,7 @@ export const AuthLabel = styled.label`
   justify-content: flex-start;
   align-items: center;
   font-size: 0.9rem;
+  font-weight: bold;
 `;
 
 export const AuthInput = styled.input`
@@ -151,7 +170,7 @@ export const AuthInput = styled.input`
   justify-content: center;
   align-items: center;
   border: 1px solid #eaeaea;
-  height: 35px;
+  height: 25px;
   padding: 5px 10px;
   border-radius: 5px;
   font-size: 0.9rem;
@@ -181,7 +200,7 @@ export const AuthButton = styled.button`
   color: #fafafa;
   font-weight: 600;
   font-size: 1rem;
-  height: 55px;
+  height: 40px;
   width: 100%;
   transition: 0.2s ease-in-out;
   border-radius: 5px;

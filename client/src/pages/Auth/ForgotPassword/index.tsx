@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 import MarkEmailUnreadIcon from "@mui/icons-material/MarkEmailUnread";
 import type { RootState, AppDispatch } from "../../../store";
 import { useSelector, useDispatch } from "react-redux";
-import { resendVerificationEmail } from "../../../store/User";
+import { forgotPassword } from "../../../store/User";
 import { toast } from "react-toastify";
 
 import { AuthInput, AuthDiv, AuthLabel } from "../styles";
 
-export default function ResendEmail() {
+export default function ForgotPassword() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user);
@@ -24,9 +24,9 @@ export default function ResendEmail() {
       return toast.error("Email is required.");
     }
 
-    dispatch(resendVerificationEmail(formData.email)).then((res) => {
-      if (res.type === "user/resendVerificationEmail/fulfilled") {
-        toast.success("Email sent.");
+    dispatch(forgotPassword(formData.email)).then((res) => {
+      if (res.type === "user/forgotPassword/fulfilled") {
+        toast.success("Password reset email sent.");
         return navigate("/auth/login");
       } else {
         toast.error("Email not sent.");
@@ -40,13 +40,14 @@ export default function ResendEmail() {
         <VerifyForm onSubmit={handleResendEmail}>
           <VerifyHeader>
             <MarkEmailUnreadIcon sx={{ fontSize: 50, color: "#1a91da" }} />
-            <h2>Resend Email Verification</h2>
+            <h2>Forgot Password</h2>
           </VerifyHeader>
 
           <VerifyBody>
             <AuthDiv>
               <AuthLabel>
-                Please enter the email address you used to signup.
+                Please enter your email address. You will receive a link to
+                create a new password via email.
               </AuthLabel>
               <AuthInput
                 autoComplete="new-password"
@@ -61,7 +62,7 @@ export default function ResendEmail() {
           </VerifyBody>
 
           <VerifyFooter>
-            <VerifyButton>Resend Email</VerifyButton>
+            <VerifyButton>Reset Password</VerifyButton>
           </VerifyFooter>
         </VerifyForm>
       </VerifyContainer>

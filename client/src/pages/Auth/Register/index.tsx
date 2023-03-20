@@ -78,18 +78,6 @@ export default function Register() {
                 <p>Start your 14-day free trial.</p>
               </AuthHeader>
 
-              <GoogleButton onClick={() => dispatch(googleSignUp())}>
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
-                  alt="Google Logo"
-                />
-                <p>Sign up with Google</p>
-              </GoogleButton>
-
-              <OrDiv>
-                <span>or</span>
-              </OrDiv>
-
               <AuthForm onSubmit={handleStandardSignUp}>
                 <AuthDiv>
                   <AuthLabel>Full Name</AuthLabel>
@@ -128,6 +116,14 @@ export default function Register() {
                   <AuthButton type="submit">Create Account</AuthButton>
                 </div>
               </AuthForm>
+
+              <GoogleButton onClick={() => dispatch(googleSignUp())}>
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+                  alt="Google Logo"
+                />
+                <p>Sign up with Google</p>
+              </GoogleButton>
 
               <AuthFooter>
                 <p>

@@ -41,6 +41,12 @@ interface RegisterForm {
   password: string;
 }
 
+interface ResetPasswordForm {
+  password: string;
+  confirmPassword: string;
+  token: string;
+}
+
 // Standard Auth
 // Register User
 export const registerUser = createAsyncThunk(
@@ -76,6 +82,60 @@ export const loginUser = createAsyncThunk(
         toast.error("Please verify your email address.");
         return rejectWithValue(res.data);
       }
+    } else {
+      toast.error(res.data);
+      return rejectWithValue(res.data);
+    }
+  }
+);
+
+// forgot password
+export const forgotPassword = createAsyncThunk(
+  "user/forgotPassword",
+  async (email: string, { rejectWithValue }) => {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/auth/forgot-password`,
+      { email }
+    );
+
+    if (res.status === 200) {
+      return res.data;
+    } else {
+      toast.error(res.data);
+      return rejectWithValue(res.data);
+    }
+  }
+);
+
+// reset password
+export const resetPassword = createAsyncThunk(
+  "user/resetPassword",
+  async (formData: ResetPasswordForm, { rejectWithValue }) => {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/auth/reset-password`,
+      formData
+    );
+
+    if (res.status === 200) {
+      return res.data;
+    } else {
+      toast.error(res.data);
+      return rejectWithValue(res.data);
+    }
+  }
+);
+
+// resend verification email
+export const resendVerificationEmail = createAsyncThunk(
+  "user/resendVerificationEmail",
+  async (email: string, { rejectWithValue }) => {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/auth/resend-verification-email`,
+      { email }
+    );
+
+    if (res.status === 200) {
+      return res.data;
     } else {
       toast.error(res.data);
       return rejectWithValue(res.data);

@@ -1,7 +1,10 @@
 const uuid = require("uuid");
 const jwt = require("jsonwebtoken");
 const { User, RefreshToken, VerificationToken } = require("../../models");
-const { sendAccountVerificationEmail } = require("../../utils/automatedEmails");
+const {
+  sendAccountVerificationEmail,
+  sendResetPasswordEmail,
+} = require("../../utils/automatedEmails");
 const { getJWT } = require("./utils");
 
 // @route   POST /api/auth/register
@@ -85,6 +88,93 @@ exports.login = async (req, res) => {
   }
 };
 
+// @route   POST /api/auth/forgot-password
+// @desc    Sends a user a password reset email
+// @access  Public
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).send("No email provided.");
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(200).send("Password reset email sent.");
+    }
+
+    const token = await VerificationToken.generateToken(user._id);
+
+    if (!token || token.error) {
+      return res
+        .status(token.status || 500)
+        .send(token.error || "Could not generate verification token.");
+    }
+
+    await sendResetPasswordEmail(user.email, token._id);
+
+    return res.status(200).send("Password reset email sent.");
+  } catch (e) {
+    console.log(e);
+    return res.status(e.status || 500).send(e.message);
+  }
+};
+
+// reset password
+// @route   POST /api/auth/reset-password
+// @desc    Resets a users password
+// @access  Public
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password, confirmPassword } = req.body;
+
+    if (!token || !password || !confirmPassword) {
+      return res.status(400).send("Invalid request.");
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).send("Passwords do not match.");
+    }
+
+    const verificationToken = await VerificationToken.checkToken(token);
+
+    if (!verificationToken || verificationToken.error) {
+      return res
+        .status(verificationToken.status || 500)
+        .send(
+          verificationToken.error ||
+            "Could not verify email address. Please try again."
+        );
+    }
+
+    const owner = await User.findOne({ _id: verificationToken.owner });
+
+    if (!owner) {
+      return res.status(500).send("Could not reset password.");
+    }
+
+    const updatedPassword = await User.updatePassword({
+      _id: owner._id,
+      password,
+    });
+
+    if (!updatedPassword || updatedPassword.error) {
+      return res
+        .status(updatedPassword.status || 500)
+        .send(
+          updatedPassword.error || "Could not reset password. Please try again."
+        );
+    }
+
+    return res.status(200).send("Password reset successful.");
+  } catch (e) {
+    console.log(e);
+    return res.status(e.status || 500).send(e.message);
+  }
+};
+
 // @route   POST /api/auth/verify-email
 // @desc    Verifies a users email address
 // @access  Public
@@ -118,6 +208,34 @@ exports.verifyEmail = async (req, res) => {
     }
 
     return res.send(user.toJSON());
+  } catch (e) {
+    console.log(e);
+    return res.status(e.status || 500).send(e.message);
+  }
+};
+
+// @route   POST /api/auth/resend-verification-email
+// @desc    Resends a user's verification email
+// @access  Public
+exports.resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).send("No email provided.");
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(200).send("Verification email will be sent.");
+    }
+
+    const token = await VerificationToken.generateToken(user._id);
+
+    await sendAccountVerificationEmail(user.firstName, user.email, token._id);
+
+    return res.status(200).send("Verification email sent.");
   } catch (e) {
     console.log(e);
     return res.status(e.status || 500).send(e.message);

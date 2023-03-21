@@ -2,11 +2,41 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import type { RootState, AppDispatch } from "../../../store";
+import { createOrganization } from "../../../store/Organization";
 import { useSelector, useDispatch } from "react-redux";
+import { toast } from "react-toastify";
+
+interface formData {
+  name: string;
+  size: string;
+  industry: string;
+}
 
 export default function Organization() {
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user);
+  const organization = useSelector((state: RootState) => state.organization);
+  const [formData, setFormData] = useState<formData>({
+    name: "",
+    size: "1-10",
+    industry: "real estate",
+  });
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+
+    if (Object.values(formData).includes("")) {
+      return toast.error("All fields are required.");
+    }
+
+    dispatch(
+      createOrganization({
+        name: formData.name,
+        size: formData.size,
+        industry: formData.industry,
+      })
+    );
+  };
 
   return (
     <>
@@ -16,25 +46,49 @@ export default function Organization() {
           <p>Tell us a little more about your organization.</p>
         </OnboardingHeader>
 
-        <OnboardingForm>
+        <OnboardingForm onSubmit={handleSubmit}>
           <OnboardingInputDiv>
             <OnboardingLabel>Organization Name</OnboardingLabel>
-            <OnboardingInput type="text" placeholder="Organization Name" />
+            <OnboardingInput
+              type="text"
+              placeholder="Organization Name"
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+            />
           </OnboardingInputDiv>
 
           <OnboardingInputDiv>
             <OnboardingLabel>Organization Size</OnboardingLabel>
-            <OnboardingInput type="text" placeholder="Organization Name" />
+            <OnboardingSelect
+              value={formData.size}
+              onChange={(e) =>
+                setFormData({ ...formData, size: e.target.value })
+              }
+            >
+              <OnboardingOption value="1-10">1 - 10</OnboardingOption>
+              <OnboardingOption value="11-50">11 - 50</OnboardingOption>
+              <OnboardingOption value="51-100">51 - 100</OnboardingOption>
+              <OnboardingOption value="101-500">101 - 500</OnboardingOption>
+              <OnboardingOption value="501-1000">501 - 1000+</OnboardingOption>
+            </OnboardingSelect>
           </OnboardingInputDiv>
 
           <OnboardingInputDiv>
             <OnboardingLabel>Industry</OnboardingLabel>
-            <OnboardingSelect>
-              <OnboardingOption value="1">Real Estate</OnboardingOption>
-              <OnboardingOption value="3">Sales & Marketing</OnboardingOption>
-              <OnboardingOption value="2">Technology</OnboardingOption>
-              <OnboardingOption value="3">Healthcare</OnboardingOption>
-              <OnboardingOption value="3">Other</OnboardingOption>
+            <OnboardingSelect
+              value={formData.industry}
+              onChange={(e) =>
+                setFormData({ ...formData, industry: e.target.value })
+              }
+            >
+              <OnboardingOption value="real estate">
+                Real Estate
+              </OnboardingOption>
+              <OnboardingOption value="sales">Sales</OnboardingOption>
+              <OnboardingOption value="technology">Technology</OnboardingOption>
+              <OnboardingOption value="healthcare">Healthcare</OnboardingOption>
+              <OnboardingOption value="other">Other</OnboardingOption>
             </OnboardingSelect>
           </OnboardingInputDiv>
 
@@ -50,6 +104,7 @@ const OnboardingContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 20px;
 `;
 
 const OnboardingHeader = styled.div`
@@ -57,9 +112,10 @@ const OnboardingHeader = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
 
   h1 {
-    font-size: 2rem;
+    font-size: 1.5rem;
     margin: 0;
   }
 `;
@@ -106,6 +162,8 @@ const OnboardingSelect = styled.select`
   display: flex;
   padding: 10px;
   border: 1px solid #ccc;
+  justify-content: center;
+  align-items: center;
   border-radius: 5px;
   outline: none;
   font-size: 1rem;

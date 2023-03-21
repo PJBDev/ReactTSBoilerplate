@@ -82,4 +82,24 @@ const organizationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Create a new organization
+organizationSchema.statics.createOrganization = async function (orgData) {
+  try {
+    const { owner, name, industry, size, subscription } = orgData;
+
+    const organization = await this.create(data);
+
+    if (!organization) {
+      const err = new Error("Could not create organization.");
+      err.status = 500;
+      throw err;
+    }
+
+    return organization;
+  } catch (e) {
+    console.log(e);
+    return { error: error.message, status: error.status };
+  }
+};
+
 module.exports = mongoose.model("Organization", organizationSchema);

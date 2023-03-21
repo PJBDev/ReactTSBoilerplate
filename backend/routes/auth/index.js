@@ -36,4 +36,9 @@ router.post("/forgot-password", authController.forgotPassword);
 // @access  Public
 router.post("/reset-password", authController.resetPassword);
 
+// @route   POST /api/auth/refresh-token
+// @desc    Refresh a user's access token
+// @access  Public
+router.post("/refresh-token", authController.refreshToken);
+
 module.exports = router;

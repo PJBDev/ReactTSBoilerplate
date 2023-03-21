@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const uuid = require("uuid");
 const bcrypt = require("bcrypt");
 const validator = require("mongoose-validator");
-const stripe = require("stripe")(process.env.STRIPE_LIVE_KEY);
 
 const nameValidator = [
   validator({
@@ -142,17 +141,11 @@ userSchema.statics.standardRegistration = async function (profile) {
       throw err;
     }
 
-    // create stripe customer
-    const customer = await stripe.customers.create({
-      description: "Customer for " + email,
-    });
-
     const user = this.create({
       firstName: profile.firstName,
       lastName: profile.lastName,
       email: profile.email,
       password: profile.password || uuid.v4(),
-      stripeCustomerId: customer.id,
     });
 
     return user;
@@ -252,18 +245,12 @@ userSchema.statics.googleRegistration = async function (profile) {
       throw err;
     }
 
-    // create stripe customer
-    const customer = await stripe.customers.create({
-      description: "Customer for " + email,
-    });
-
     const user = this.create({
       avatar: profile.avatar,
       firstName: profile.firstName,
       lastName: profile.lastName,
       email: profile.email,
       isEmailVerified: profile.emailVerified,
-      stripeCustomerId: customer.id,
       password: uuid.v4(),
     });
 

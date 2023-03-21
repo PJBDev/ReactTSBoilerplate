@@ -63,7 +63,7 @@ exports.protectedRoute = async (req, res, next) => {
         }
       });
   } catch (e) {
-    console.log(e.message);
+    console.log("JWT error", e.message);
     res.status(e.response.status || 500).send({
       error: "Access denied. Invalid token",
       status: e.response.status,

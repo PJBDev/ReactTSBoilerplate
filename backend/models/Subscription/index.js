@@ -47,7 +47,6 @@ subscriptionSchema.statics.createSubscription = async function (
       plan,
       status,
       startDate,
-      endDate,
     });
 
     if (!subscription) {

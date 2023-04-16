@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const uuid = require("uuid");
+const stripe = require("stripe")(process.env.STRIPE_LIVE_KEY);
 
 const organizationSchema = new mongoose.Schema(
   {
@@ -87,13 +88,29 @@ organizationSchema.statics.createOrganization = async function (orgData) {
   try {
     const { owner, name, industry, size, subscription } = orgData;
 
-    const organization = await this.create(data);
+    // create stripe customer
+    const stripeCustomerId = await stripe.customers.create({
+      description: "Account for " + name,
+    });
+
+    const organization = await this.create({
+      owner,
+      name,
+      stripeCustomerId: stripeCustomerId.id,
+      industry,
+      size,
+      subscription,
+    });
 
     if (!organization) {
       const err = new Error("Could not create organization.");
       err.status = 500;
       throw err;
     }
+
+    organization.members.push(owner);
+
+    await organization.save();
 
     return organization;
   } catch (e) {

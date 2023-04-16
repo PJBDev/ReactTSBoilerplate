@@ -92,7 +92,15 @@ export default function Organization() {
             </OnboardingSelect>
           </OnboardingInputDiv>
 
-          <OnboardingButton>Submit</OnboardingButton>
+          <OnboardingButton
+            disabled={
+              organization.loading || Object.values(formData).includes("")
+                ? true
+                : false
+            }
+          >
+            Submit
+          </OnboardingButton>
         </OnboardingForm>
       </OnboardingContainer>
     </>
@@ -202,5 +210,10 @@ const OnboardingButton = styled.button`
 
   &:hover {
     background-color: #1a91da;
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
   }
 `;

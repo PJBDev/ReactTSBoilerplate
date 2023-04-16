@@ -1,15 +1,55 @@
 const { Organization, User, Subscription } = require("../../models");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 // @route   POST /api/organization/
 // @desc    Creates a new organization
 // @access  Private
 exports.createOrganization = async (req, res) => {
   try {
-    // create stripe customer
-    const customer = await stripe.customers.create({
-      description: "Customer for " + email,
+    const { name, industry, size } = req.body;
+
+    if (!name || !industry || !size) {
+      return res.status(400).send("Missing required fields.");
+    }
+
+    // add organization to user
+    const user = await User.findOne({ _id: req.user._id });
+
+    if (!user) {
+      return res.status(500).send("Could not find user.");
+    }
+
+    if (user.organization) {
+      return res.status(400).send("User is already in an organization.");
+    }
+
+    // create stripe subscription
+    const subscription = await Subscription.createSubscription({
+      plan: "trial",
+      status: "active",
+      startDate: Date.now(),
+      endDate: Date.now() + 14 * 24 * 60 * 60 * 1000,
     });
+
+    if (!subscription || subscription.error) {
+      return res.status(subscription.status || 500).send(subscription.error);
+    }
+
+    const organization = await Organization.createOrganization({
+      owner: req.user._id,
+      name,
+      industry,
+      size,
+      subscription: subscription._id,
+    });
+
+    if (!organization || organization.error) {
+      return res.status(organization.status || 500).send(organization.error);
+    }
+
+    user.organization = organization._id;
+    await user.save();
+
+    return res.send(organization);
   } catch (e) {
     console.log(e);
     return res.status(e.status || 500).send(e.message);

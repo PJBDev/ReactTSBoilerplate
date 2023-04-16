@@ -53,6 +53,7 @@ export const createOrganization = createAsyncThunk(
     if (res.status === 200) {
       return res.data;
     } else {
+      toast.error(res.data);
       return rejectWithValue(res.data);
     }
   }
@@ -76,10 +77,15 @@ export const organizationSlice = createSlice({
       state.name = "";
       state.size = "";
       state.industry = "";
+      localStorage.setItem("organization", JSON.stringify({}));
     },
   },
   extraReducers: (builder) => {
     // Create Organization
+    builder.addCase(createOrganization.pending, (state) => {
+      state.loading = true;
+    });
+
     builder.addCase(createOrganization.fulfilled, (state, action) => {
       state.loading = false;
       state._id = action.payload._id;
@@ -87,6 +93,7 @@ export const organizationSlice = createSlice({
       state.name = action.payload.name;
       state.size = action.payload.size;
       state.industry = action.payload.industry;
+      localStorage.setItem("organization", JSON.stringify(action.payload));
     });
 
     builder.addCase(createOrganization.rejected, (state, action) => {
